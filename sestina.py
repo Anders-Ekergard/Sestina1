@@ -3,7 +3,6 @@ import os
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
 def sestina(endwords: list[str]) -> list[list[str]]:
     if len(endwords)!=6:
         raise ValueError("Please give six words")
@@ -20,50 +19,51 @@ def sestina(endwords: list[str]) -> list[list[str]]:
         stanza = [endwords[i] for i in rot]
         stanzas.append(stanza)
     return stanzas
-def tercet(words: str)->list[list,str]:
-     tercet = [
+
+def tercet(words: list[str]) -> list[list[str]]:
+    tercet = [
         [words[2], words[5]],
         [words[4], words[3]],
-        [words[6 % len(words)], words[1]]  
+        [words[0], words[1]]  
     ]
-     return tercet
-def write_prompts(stanzas: list[list[str]], tercet: list[list[str]]) -> list[str]:
+    return tercet
+
+def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]]) -> list[str]:
     prompts = []
     model="gpt-3.5-turbo"
     
-        
     for stanza in stanzas:
         for word in stanza:
             prompt = f"Write one lyric line with the last word being: {word}"
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                #messages includes three lines from Cathy Park Hongs Enginen Empire (2012)
-                messages=[messages={"role": "system", "content": "**Act as a poetic assistant that creates lyric lines ending with a given word.**."},
-
-        {"role": "user", "content": "Generate a lyric line ending with the word  'sun'"},
-
-        {"role": "assistant", "content": "Market forces are brighter than the sun"},
-
-        {"role": "user", "content": "Generate a lyric line ending with the word  'supplies'."},
-        {"role": "assistant", "content": "Dear natty vessel of chemical dye, dear floating factory for cleaning supplies"},
-        {"role": "user", "content": "Generate a lyric line ending with the word 'petrol'" },
-        {"role": "assistant", "content": "I will stuff you cheek to jowl and pipetter you with petrol"},
-        {"role": "user", "content": prompt}], 
-                          
+                messages=[
+                    {"role": "system", "content": "Act as a poetic assistant that creates lyric lines ending with a given word."},
+                    {"role": "user", "content": "Generate a lyric line ending with the word 'sun'"},
+                    {"role": "assistant", "content": "Market forces are brighter than the sun"},
+                    {"role": "user", "content": "Generate a lyric line ending with the word 'supplies'."},
+                    {"role": "assistant", "content": "Dear natty vessel of chemical dye, dear floating factory for cleaning supplies"},
+                    {"role": "user", "content": "Generate a lyric line ending with the word 'petrol'"},
+                    {"role": "assistant", "content": "I will stuff you cheek to jowl and pipetter you with petrol"},
+                    {"role": "user", "content": prompt}
+                ],
                 max_tokens=50,
-)
-    for line in tercet :
-        prompt = f"Write a poetic line where the last words are: {rad[0]} and {rad[1]}"
+            )
+            prompts.append(response.choices[0].message.content)
+    
+    for line in tercet_lines:
+        prompt = f"Write a poetic line where the last words are: {line[0]} and {line[1]}"
         prompts.append(prompt)
-    prompts.append(response.choices[0].message.content)
+    
     return prompts
 
 def main():
     example_end_words = ["bright", "free", "beyond", "sitcom", "life", "world"]
-
+    
     stanzas = sestina(example_end_words)
-   
-    poems = write_prompts(stanzas, tercet)
+    tercet_lines = tercet(example_end_words)
+    
+    poems = write_prompts(stanzas, tercet_lines)
     for poem in poems:
         print(poem)
 
