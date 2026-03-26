@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 import time
 
-# Ladda miljövariabler
+
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -34,7 +34,7 @@ def tercet(words: list[str]) -> list[list[str]]:
 def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]]) -> list[str]:
     poems = []
     model = "gpt-4o-mini"
-
+    #Three lines from a poem by Cathy Park Hongs, from Engine Empire (2012), added as "training".
     for stanza in stanzas:
         for word in stanza:
             prompt = f"Write one lyric line with the last word being: {word}"
