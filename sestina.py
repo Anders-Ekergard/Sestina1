@@ -89,9 +89,11 @@ def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]]) -> li
     return poems
 
 def main():
-    example_end_words = ["bright", "free", "beyond", "sitcom", "life", "world"]
-    stanzas = sestina(example_end_words)
-    tercet_lines = tercet(example_end_words)
+    end_words = input("Choice six words that will be used in the poem")
+    exampel= input("Provide three lyric lines that will be used to fine-tone the program")
+    for line in example:
+    stanzas = sestina(end_words)
+    tercet_lines = tercet(end_words)
 
     print("Genererar poem...")
     poems = write_prompts(stanzas, tercet_lines)
