@@ -31,34 +31,58 @@ def tercet(words: list[str]) -> list[list[str]]:
         [words[0], words[1]]
     ]
 
-def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]]) -> list[str]:
+def extract_last_word(line: str) -> str:
+    """Extract the last word from a line"""
+    words = line.strip().split()
+    if words:
+        return words[-1].rstrip('.,!?;:')
+    return ""
+
+def build_example_messages(example_lines: list[str]) -> list[dict]:
+    """Bygg exempel-meddelanden baserat på användarens input"""
+    messages = []
+    for line in example_lines:
+        last_word = extract_last_word(line)
+        if last_word:
+            messages.append({
+                "role": "user",
+                "content": f"Generate a lyric line ending with the word '{last_word}'"
+            })
+            messages.append({
+                "role": "assistant",
+                "content": line
+            })
+    return messages
+
+def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]], example_lines: list[str]) -> list[str]:
     poems = []
     model = "gpt-4o-mini"
-    #Three lines from a poem by Cathy Park Hongs, from Engine Empire (2012), added as "training".
+    
+    # Bygg exempel-meddelanden från användarens input
+    example_messages = build_example_messages(example_lines)
+    
     for stanza in stanzas:
         for word in stanza:
             prompt = f"Write one lyric line with the last word being: {word}"
             print(f"\nSkickar prompt: {prompt}")
 
             try:
+                # Bygg meddelande-listan med användarens exempel
+                messages = [
+                    {"role": "system", "content": "Act as a poetic assistant that creates lyric lines ending with a given word. Respond only with the lyric line, no extra text."}
+                ]
+                messages.extend(example_messages)
+                messages.append({"role": "user", "content": prompt})
+                
                 response = client.chat.completions.create(
                     model=model,
-                    messages=[
-                        {"role": "system", "content": "Act as a poetic assistant that creates lyric lines ending with a given word. Respond only with the lyric line, no extra text."},
-                        {"role": "user", "content": "Generate a lyric line ending with the word 'sun'"},
-                        {"role": "assistant", "content": "Market forces are brighter than the sun"},
-                        {"role": "user", "content": "Generate a lyric line ending with the word 'supplies'"},
-                        {"role": "assistant", "content": "Dear natty vessel of chemical dye, dear floating factory for cleaning supplies"},
-                        {"role": "user", "content": "Generate a lyric line ending with the word 'petrol'"},
-                        {"role": "assistant", "content": "I will stuff you cheek to jowl and pipetter you with petrol"},
-                        {"role": "user", "content": prompt},
-                    ],
-                    max_tokens=50,
+                    messages=messages,
+                    max_tokens=25,
                 )
                 poem_line = response.choices[0].message.content
                 poems.append(poem_line)
                
-                time.sleep(1)  # Wait to awoyed rate limits
+                time.sleep(1)  # Wait to avoid rate limits
 
             except Exception as e:
                 print(f"Error during call for API : {e}")
@@ -69,12 +93,15 @@ def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]]) -> li
         print(f"\nSkickar prompt för tercet: {prompt}")
 
         try:
+            messages = [
+                {"role": "system", "content": "Act as a poetic assistant that creates lyric lines ending with two given words. Respond only with the lyric line, no extra text."}
+            ]
+            messages.extend(example_messages)
+            messages.append({"role": "user", "content": prompt})
+            
             response = client.chat.completions.create(
                 model=model,
-                messages=[
-                    {"role": "system", "content": "Act as a poetic assistant that creates lyric lines ending with two given words. Respond only with the lyric line, no extra text."},
-                    {"role": "user", "content": prompt},
-                ],
+                messages=messages,
                 max_tokens=50,
             )
             poem_line = response.choices[0].message.content
@@ -89,16 +116,31 @@ def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]]) -> li
     return poems
 
 def main():
-    end_words = input("Choice six words that will be used in the poem")
-    exampel= input("Provide three lyric lines that will be used to fine-tone the program")
-    for line in example:
+    end_words_input = input("Choose six words that will be used in the poem (separated by spaces): ")
+    end_words = end_words_input.split()
+    
+    if len(end_words) != 6:
+        print("Error: Please provide exactly six words")
+        return
+    
+    print("\nProvide three lyric lines that will be used as examples:")
+    example_lines = []
+    for i in range(3):
+        line = input(f"Lyric line {i+1}: ")
+        if line.strip():
+            example_lines.append(line.strip())
+    
+    if len(example_lines) < 3:
+        print("Error: Please provide three lyric lines")
+        return
+    
     stanzas = sestina(end_words)
     tercet_lines = tercet(end_words)
 
-    print("Genererar poem...")
-    poems = write_prompts(stanzas, tercet_lines)
+    print("\nGenererar poem...")
+    poems = write_prompts(stanzas, tercet_lines, example_lines)
 
-
+    print("\n--- Genererade lyrikrader ---")
     for i, poem in enumerate(poems, 1):
         print(f"{i}. {poem}")
 
