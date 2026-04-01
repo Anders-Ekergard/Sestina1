@@ -39,7 +39,7 @@ def extract_last_word(line: str) -> str:
     return ""
 
 def build_example_messages(example_lines: list[str]) -> list[dict]:
-    """Bygg exempel-meddelanden baserat på användarens input"""
+
     messages = []
     for line in example_lines:
         last_word = extract_last_word(line)
@@ -58,7 +58,7 @@ def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]], examp
     poems = []
     model = "gpt-4o-mini"
     
-    # Bygg exempel-meddelanden från användarens input
+    # Create example from users input
     example_messages = build_example_messages(example_lines)
     
     for stanza in stanzas:
@@ -67,7 +67,7 @@ def write_prompts(stanzas: list[list[str]], tercet_lines: list[list[str]], examp
             print(f"\nSkickar prompt: {prompt}")
 
             try:
-                # Bygg meddelande-listan med användarens exempel
+                
                 messages = [
                     {"role": "system", "content": "Act as a poetic assistant that creates lyric lines ending with a given word. Respond only with the lyric line, no extra text."}
                 ]
